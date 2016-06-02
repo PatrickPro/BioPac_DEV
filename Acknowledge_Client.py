@@ -7,9 +7,10 @@ import sys, socket
 import win32com.client
 import time
 
+
 # Variables
 SERVER = '172.20.43.180'
-PORT = 49504
+PORT = 49501
 
 class AcqKnowledgeWindow:
     """Encapsulates some calls to the winapi for window management"""
@@ -18,11 +19,11 @@ class AcqKnowledgeWindow:
         """Constructor"""
         self._handle = None
         self._titlebar_name = None
-        self._app_name = ".*AcqKnowledge.*"
+        self._app_name = ".*AcqKnowledge -.*"
         self._shell = win32com.client.Dispatch("WScript.Shell")
         self.find_window_wildcard(self._app_name)  # see if app is running
         if self._handle == None:
-            print '\033[91m' + "Can't find AcqKnowledge Software - not running?"
+            print '\033[91m' + "Can't find AcqKnowledge Software - not recording?"
             print '\033[91m' + '\033[1m' + "Script execution stopped!"
             raise SystemExit()
 
@@ -52,8 +53,7 @@ class AcqKnowledgeWindow:
     def window_tasks(self):
         """Combines necessary tasks for SendKeys function"""
         if self._handle != win32gui.GetForegroundWindow():
-            print "not in foreground"
-            # self.find_window_wildcard(self._app_name)
+            print "Opening AcqKnowledge Window..."
             self.restore_window()
             self.fix_ui()
         self.set_foreground()
@@ -72,25 +72,33 @@ class AcqKnowledgeWindow:
         self.window_tasks()
         self._shell.SendKeys("{F3}")
 
-
+print >> sys.stderr, 'Do not close this window while driving simulation is running!'
 acq = AcqKnowledgeWindow()
-acq.send_f1()
-# time.sleep(1)
-acq.send_f2()
-# time.sleep(1)
-acq.send_f3()
+# Create a TCP/IP socket
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+# Connect the socket to the port where the server is listening
+server_address = (SERVER, PORT)
 
 try:
-    # Create a TCP/IP socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    # Connect the socket to the port where the server is listening
-    server_address = (SERVER, PORT)
-    print >> sys.stderr, 'connecting to %s port %s' % server_address
+    print >> sys.stderr, 'Connecting to %s port %s' % server_address
     sock.connect(server_address)
 
-    time.sleep(5)
+    print "Connected to Simulator PC"
+    while True:
+        data = sock.recv(256)
+        if data == "F1":
+            acq.send_f1()
+            print "Received:", data
+        if data == "F2":
+            acq.send_f2()
+            print "Received:", data
+        if data == "F3":
+            acq.send_f3()
+            print "Received:", data
+except IOError:
+    print >> sys.stderr, "Can't connect to server!"
+
 finally:
     print 'Closing socket'
-    socket.close()
+    sock.close()
