@@ -78,7 +78,6 @@ for x in range(0,55,1):
         server.sendEnd()
     time.sleep(0.5)
 
-
 server.stopServer()
 
 
