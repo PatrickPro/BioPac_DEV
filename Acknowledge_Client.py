@@ -3,9 +3,13 @@
 # USE ONLY WITH: Python 2.7 + https://sourceforge.net/projects/pywin32/
 import win32gui, win32process, win32con
 import re
+import sys, socket
 import win32com.client
 import time
 
+# Variables
+SERVER = '172.20.43.180'
+PORT = 49504
 
 class AcqKnowledgeWindow:
     """Encapsulates some calls to the winapi for window management"""
@@ -75,3 +79,18 @@ acq.send_f1()
 acq.send_f2()
 # time.sleep(1)
 acq.send_f3()
+
+
+try:
+    # Create a TCP/IP socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Connect the socket to the port where the server is listening
+    server_address = (SERVER, PORT)
+    print >> sys.stderr, 'connecting to %s port %s' % server_address
+    sock.connect(server_address)
+
+    time.sleep(5)
+finally:
+    print 'Closing socket'
+    socket.close()
