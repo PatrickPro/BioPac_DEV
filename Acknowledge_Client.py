@@ -7,6 +7,7 @@ import sys, socket
 import win32com.client
 import time
 
+
 # Variables
 SERVER = '172.20.43.180'
 PORT = 49501
@@ -52,8 +53,7 @@ class AcqKnowledgeWindow:
     def window_tasks(self):
         """Combines necessary tasks for SendKeys function"""
         if self._handle != win32gui.GetForegroundWindow():
-            print "not in foreground"
-            # self.find_window_wildcard(self._app_name)
+            print "Opening AcqKnowledge Window..."
             self.restore_window()
             self.fix_ui()
         self.set_foreground()
@@ -72,18 +72,18 @@ class AcqKnowledgeWindow:
         self.window_tasks()
         self._shell.SendKeys("{F3}")
 
-
+print >> sys.stderr, 'Do not close this window while driving simulation is running!'
 acq = AcqKnowledgeWindow()
-
 # Create a TCP/IP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Connect the socket to the port where the server is listening
 server_address = (SERVER, PORT)
-print >> sys.stderr, 'connecting to %s port %s' % server_address
-sock.connect(server_address)
 
 try:
+    print >> sys.stderr, 'Connecting to %s port %s' % server_address
+    sock.connect(server_address)
+
     print "Connected to Simulator PC"
     while True:
         data = sock.recv(256)
@@ -96,10 +96,8 @@ try:
         if data == "F3":
             acq.send_f3()
             print "Received:", data
-
-
-
-
+except IOError:
+    print >> sys.stderr, "Can't connect to server!"
 
 finally:
     print 'Closing socket'
